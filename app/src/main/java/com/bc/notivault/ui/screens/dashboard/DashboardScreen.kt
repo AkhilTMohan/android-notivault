@@ -61,6 +61,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -86,6 +87,7 @@ import com.bc.notivault.ui.components.AppIcon
 import com.bc.notivault.ui.components.NotiVaultBottomNavBar
 import com.bc.notivault.ui.components.NotificationActionBottomSheet
 import com.bc.notivault.ui.components.StatusBadge
+import com.bc.notivault.ui.components.SwipeToDeleteContainer
 import com.bc.notivault.ui.navigation.Destinations
 import com.bc.notivault.util.DateTimeUtils
 import com.bc.notivault.util.NotificationPermissionHelper
@@ -583,30 +585,41 @@ fun DashboardScreen(
                             haptic.longPress()
                             actionNotification = it
                         },
+                        onDeleteNotification = { id ->
+                            viewModel.deleteNotification(id)
+                        },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
                 } else {
                     val record = group.notifications.first()
-                    LatestNotificationRow(
-                        record = record,
-                        onClick = {
-                            haptic.click()
-                            onNavigateToDetail(record.id)
+                    SwipeToDeleteContainer(
+                        onDelete = {
+                            viewModel.deleteNotification(record.id)
                         },
-                        onLongClick = {
-                            haptic.longPress()
-                            actionNotification = record
-                        },
-                        onAppIconClick = {
-                            haptic.click()
-                            onNavigateToAppNotifications(record.packageName)
-                        },
-                        onAppIconLongClick = {
-                            haptic.longPress()
-                            actionApp = Pair(record.packageName, record.appName)
-                        },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        cornerRadius = 14.dp
+                    ) {
+                        LatestNotificationRow(
+                            record = record,
+                            onClick = {
+                                // Collapsed notification row goes to app detail page
+                                haptic.click()
+                                onNavigateToAppNotifications(record.packageName)
+                            },
+                            onLongClick = {
+                                haptic.longPress()
+                                actionNotification = record
+                            },
+                            onAppIconClick = {
+                                haptic.click()
+                                onNavigateToAppNotifications(record.packageName)
+                            },
+                            onAppIconLongClick = {
+                                haptic.longPress()
+                                actionApp = Pair(record.packageName, record.appName)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -641,6 +654,7 @@ private fun AppGroupNotificationCard(
     onNavigateToDetail: (Long) -> Unit,
     onAppLongClick: () -> Unit,
     onNotificationLongClick: (NotificationRecordEntity) -> Unit,
+    onDeleteNotification: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val latest = group.notifications.first()
@@ -656,13 +670,13 @@ private fun AppGroupNotificationCard(
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Main App Card Header Row:
-            // Tapping the card navigates directly to the notification detail view.
-            // Tapping the down arrow specifically expands/collapses the notifications under the card.
+            // If user clicked on collapsed notification row, go to the app detail page not to notification detail page.
+            // If user clicks on down arrow, expand/collapse notifications.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .combinedClickable(
-                        onClick = { onNavigateToDetail(latest.id) },
+                        onClick = onNavigateToApp,
                         onLongClick = { onNotificationLongClick(latest) }
                     )
                     .padding(12.dp),
@@ -797,13 +811,20 @@ private fun AppGroupNotificationCard(
                         )
                     }
 
-                    // Individual notification rows: clicking goes to individual notification detail view
+                    // Individual notification rows: support swipe left-to-right to delete
                     group.notifications.forEach { item ->
-                        ExpandedNotificationSubCard(
-                            record = item,
-                            onClick = { onNavigateToDetail(item.id) },
-                            onLongClick = { onNotificationLongClick(item) }
-                        )
+                        key(item.id) {
+                            SwipeToDeleteContainer(
+                                onDelete = { onDeleteNotification(item.id) },
+                                cornerRadius = 10.dp
+                            ) {
+                                ExpandedNotificationSubCard(
+                                    record = item,
+                                    onClick = { onNavigateToDetail(item.id) },
+                                    onLongClick = { onNotificationLongClick(item) }
+                                )
+                            }
+                        }
                     }
                 }
             }

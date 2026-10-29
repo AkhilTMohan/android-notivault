@@ -80,6 +80,7 @@ import com.bc.notivault.ui.components.AppActionBottomSheet
 import com.bc.notivault.ui.components.AppIcon
 import com.bc.notivault.ui.components.NotificationActionBottomSheet
 import com.bc.notivault.ui.components.NotificationCard
+import com.bc.notivault.ui.components.SwipeToDeleteContainer
 import com.bc.notivault.ui.screens.dashboard.DashboardFilter
 import com.bc.notivault.util.DateTimeUtils
 import com.bc.notivault.util.rememberHaptic
@@ -462,23 +463,31 @@ fun AppNotificationsScreen(
                 }
             }
 
-            // Notification Cards Feed (matching Phone 3) with long press support
+            // Notification Cards Feed (matching Phone 3) with swipe-to-delete (left-to-right) and long press support
             items(
                 items = uiState.notifications,
                 key = { it.id }
             ) { record ->
-                AppDetailNotificationCard(
-                    record = record,
-                    onClick = {
-                        haptic.click()
-                        onNavigateToDetail(record.id)
+                SwipeToDeleteContainer(
+                    onDelete = {
+                        viewModel.deleteNotification(record.id)
+                        Toast.makeText(context, "Notification deleted", Toast.LENGTH_SHORT).show()
                     },
-                    onLongClick = {
-                        haptic.longPress()
-                        actionNotification = record
-                    },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    cornerRadius = 14.dp
+                ) {
+                    AppDetailNotificationCard(
+                        record = record,
+                        onClick = {
+                            haptic.click()
+                            onNavigateToDetail(record.id)
+                        },
+                        onLongClick = {
+                            haptic.longPress()
+                            actionNotification = record
+                        }
+                    )
+                }
             }
         }
     }
