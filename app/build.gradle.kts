@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.bc.notivault"
+        applicationId = "com.bc.notificationmanager"
         minSdk = 26
         targetSdk = 37
         versionCode = 1

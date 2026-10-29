@@ -9,8 +9,10 @@ class AdMobConfigTest {
 
     @Test
     fun testAdUnitIdsConfigured() {
-        assertEquals("ca-app-pub-6629937725996361/6561498245", AdConfig.BANNER_AD_UNIT_ID)
-        assertEquals("ca-app-pub-6629937725996361/3328830245", AdConfig.INTERSTITIAL_AD_UNIT_ID)
+        assertEquals("ca-app-pub-6629937725996361/6561498245", AdConfig.PROD_BANNER_AD_UNIT_ID)
+        assertEquals("ca-app-pub-6629937725996361/3328830245", AdConfig.PROD_INTERSTITIAL_AD_UNIT_ID)
+        assertTrue(AdConfig.BANNER_AD_UNIT_ID.isNotEmpty())
+        assertTrue(AdConfig.INTERSTITIAL_AD_UNIT_ID.isNotEmpty())
     }
 
     @Test
