@@ -1,6 +1,7 @@
 package com.bc.notivault
 
 import android.app.Application
+import com.bc.notivault.ads.AdManager
 import com.bc.notivault.data.preferences.PreferenceManager
 import com.bc.notivault.data.repository.NotificationRepository
 import com.bc.notivault.di.ApplicationScope
@@ -20,11 +21,18 @@ class NotiVaultApplication : Application() {
     lateinit var preferenceManager: PreferenceManager
 
     @Inject
+    lateinit var adManager: AdManager
+
+    @Inject
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
     override fun onCreate() {
         super.onCreate()
+
+        // Initialize Google Mobile Ads SDK and preload first interstitial
+        adManager.initialize()
+
         // Execute automatic retention cleanup on app startup in background
         applicationScope.launch {
             val retentionDays = preferenceManager.retentionDays.first()

@@ -3,4 +3,7 @@
     <string name="app_title">NotiVault: Notification History</string>
     <string name="notification_listener_service_name">NotiVault Notification Listener</string>
     <string name="notification_listener_service_description">Captures and vaults notifications securely and locally on device.</string>
+
+    <!-- Google AdMob App ID: Replace with your production AdMob App ID (e.g. ca-app-pub-6629937725996361~XXXXXXXXXX) -->
+    <string name="admob_app_id">ca-app-pub-ca-app-pub-6629937725996361~7268075257</string>
 </resources>

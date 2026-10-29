@@ -2,12 +2,14 @@ package com.bc.notivault.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.bc.notivault.ads.AdManager
 import com.bc.notivault.ui.screens.analytics.AnalyticsScreen
 import com.bc.notivault.ui.screens.analytics.AnalyticsViewModel
 import com.bc.notivault.ui.screens.appnotifications.AppNotificationsScreen
@@ -23,6 +25,7 @@ import com.bc.notivault.ui.screens.detail.DetailViewModel
 import com.bc.notivault.ui.screens.onboarding.OnboardingScreen
 import com.bc.notivault.ui.screens.settings.SettingsScreen
 import com.bc.notivault.ui.screens.settings.SettingsViewModel
+import com.bc.notivault.util.findActivity
 
 object Destinations {
     const val ONBOARDING = "onboarding"
@@ -47,8 +50,19 @@ fun NotiVaultNavHost(
     navController: NavHostController,
     startDestination: String,
     onCompleteOnboarding: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    adManager: AdManager? = null
 ) {
+    val context = LocalContext.current
+    val navigateWithAd: (() -> Unit) -> Unit = { navigationAction ->
+        val activity = context.findActivity()
+        if (adManager != null && activity != null) {
+            adManager.showInterstitialIfAppropriate(activity, navigationAction)
+        } else {
+            navigationAction()
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -70,13 +84,19 @@ fun NotiVaultNavHost(
             DashboardScreen(
                 viewModel = viewModel,
                 onNavigateToAppNotifications = { pkg ->
-                    navController.navigate(Destinations.appNotificationsRoute(pkg))
+                    navigateWithAd {
+                        navController.navigate(Destinations.appNotificationsRoute(pkg))
+                    }
                 },
                 onNavigateToDetail = { id ->
-                    navController.navigate(Destinations.detailRoute(id))
+                    navigateWithAd {
+                        navController.navigate(Destinations.detailRoute(id))
+                    }
                 },
                 onNavigateToApps = {
-                    navController.navigate(Destinations.APPS)
+                    navigateWithAd {
+                        navController.navigate(Destinations.APPS)
+                    }
                 },
                 onNavigateToCalendar = {
                     navController.navigate(Destinations.CALENDAR) {
@@ -86,7 +106,9 @@ fun NotiVaultNavHost(
                     }
                 },
                 onNavigateToAnalytics = {
-                    navController.navigate(Destinations.ANALYTICS)
+                    navigateWithAd {
+                        navController.navigate(Destinations.ANALYTICS)
+                    }
                 },
                 onNavigateToSettings = {
                     navController.navigate(Destinations.SETTINGS) {
@@ -115,7 +137,9 @@ fun NotiVaultNavHost(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onNavigateToAppNotifications = { pkg ->
-                    navController.navigate(Destinations.appNotificationsRoute(pkg))
+                    navigateWithAd {
+                        navController.navigate(Destinations.appNotificationsRoute(pkg))
+                    }
                 },
                 onNavigateToCalendar = {
                     navController.navigate(Destinations.CALENDAR)
@@ -139,7 +163,9 @@ fun NotiVaultNavHost(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onNavigateToDetail = { id ->
-                    navController.navigate(Destinations.detailRoute(id))
+                    navigateWithAd {
+                        navController.navigate(Destinations.detailRoute(id))
+                    }
                 },
                 onNavigateToCalendar = {
                     navController.navigate(Destinations.CALENDAR)
@@ -153,7 +179,9 @@ fun NotiVaultNavHost(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onNavigateToAppNotifications = { pkg, date ->
-                    navController.navigate(Destinations.appNotificationsRoute(pkg, date))
+                    navigateWithAd {
+                        navController.navigate(Destinations.appNotificationsRoute(pkg, date))
+                    }
                 },
                 onNavigateToHome = {
                     navController.navigate(Destinations.DASHBOARD) {
@@ -178,7 +206,9 @@ fun NotiVaultNavHost(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onNavigateToAppNotifications = { pkg ->
-                    navController.navigate(Destinations.appNotificationsRoute(pkg))
+                    navigateWithAd {
+                        navController.navigate(Destinations.appNotificationsRoute(pkg))
+                    }
                 }
             )
         }

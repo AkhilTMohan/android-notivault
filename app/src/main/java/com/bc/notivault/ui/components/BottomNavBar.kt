@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -74,7 +73,6 @@ fun NotiVaultBottomNavBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
                     .padding(vertical = 6.dp, horizontal = 12.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
@@ -99,27 +97,39 @@ fun NotiVaultBottomNavBar(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-                                    else Color.Transparent
+                                    if (isSelected) {
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                                    } else {
+                                        Color.Transparent
+                                    }
                                 )
-                                .padding(horizontal = 14.dp, vertical = 4.dp),
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
                                 contentDescription = tab.title,
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = if (isSelected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                },
                                 modifier = Modifier.size(24.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(3.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
 
                         Text(
                             text = tab.title,
+                            style = MaterialTheme.typography.labelSmall,
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            }
                         )
                     }
                 }
