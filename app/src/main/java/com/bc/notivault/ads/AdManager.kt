@@ -4,11 +4,13 @@ import android.app.Activity
 import android.content.Context
 import android.os.SystemClock
 import android.util.Log
+import com.bc.notivault.BuildConfig
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -36,6 +38,17 @@ class AdManager @Inject constructor(
      */
     fun initialize() {
         if (isInitialized.compareAndSet(false, true)) {
+            if (BuildConfig.DEBUG) {
+                val testDeviceIds = listOf(
+                    "BF9E2CC7EE5ED379FAA04A7448AB38CE",
+                    AdRequest.DEVICE_ID_EMULATOR
+                )
+                val config = RequestConfiguration.Builder()
+                    .setTestDeviceIds(testDeviceIds)
+                    .build()
+                MobileAds.setRequestConfiguration(config)
+            }
+
             MobileAds.initialize(context) { status ->
                 Log.d(TAG, "Google Mobile Ads SDK initialized: $status")
                 preloadInterstitial()
@@ -53,9 +66,12 @@ class AdManager @Inject constructor(
 
         isInterstitialLoading.set(true)
         val adRequest = AdRequest.Builder().build()
+        val adUnitId = AdConfig.INTERSTITIAL_AD_UNIT_ID
+        Log.d(TAG, "Loading interstitial ad with ID: $adUnitId")
+
         InterstitialAd.load(
             context,
-            AdConfig.INTERSTITIAL_AD_UNIT_ID,
+            adUnitId,
             adRequest,
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
@@ -76,7 +92,7 @@ class AdManager @Inject constructor(
     /**
      * Shows an interstitial ad at natural transition points with full compliance to AdMob policies:
      * - Cooldown period (minimum 60s) between consecutive interstitial impressions.
-     * - Action frequency capping (every 3 actions).
+     * - Action frequency capping (governed by threshold).
      * - Immediate execution of [onComplete] if ad is not ready, fails, or after dismissal,
      *   ensuring no blocking or disruption to the user experience.
      */
@@ -113,6 +129,7 @@ class AdManager @Inject constructor(
             }
             currentAd.show(activity)
         } else {
+            Log.d(TAG, "Interstitial skipped (eligible=$isEligible, ready=${currentAd != null}, count=$count, timeSinceLast=${timeSinceLastAd}ms)")
             if (currentAd == null && !isInterstitialLoading.get()) {
                 preloadInterstitial()
             }
