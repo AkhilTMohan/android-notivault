@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.bc.notivault.data.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -141,6 +142,12 @@ class CalendarViewModel @Inject constructor(
 
     fun onSelectDay(dayData: DayData?) {
         _selectedDay.value = dayData
+    }
+
+    fun deleteAppNotificationsForDay(packageName: String, timestamp: Long) {
+        viewModelScope.launch {
+            repository.deleteNotificationsByPackageAndDate(packageName, timestamp)
+        }
     }
 
     private data class MonthInfo(

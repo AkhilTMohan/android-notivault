@@ -13,10 +13,10 @@ import kotlinx.coroutines.flow.Flow
 interface NotificationDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(entity: NotificationRecordEntity): Long
+    suspend fun insert(record: NotificationRecordEntity): Long
 
     @Update
-    suspend fun update(entity: NotificationRecordEntity)
+    suspend fun update(record: NotificationRecordEntity)
 
     @Query("SELECT * FROM notification_records WHERE notificationKey = :key AND removalTime IS NULL ORDER BY captureTime DESC LIMIT 1")
     suspend fun findActiveByKey(key: String): NotificationRecordEntity?
@@ -24,10 +24,10 @@ interface NotificationDao {
     @Query("SELECT * FROM notification_records WHERE notificationKey = :key ORDER BY captureTime DESC LIMIT 1")
     suspend fun findLatestByKey(key: String): NotificationRecordEntity?
 
-    @Query("SELECT * FROM notification_records WHERE id = :id LIMIT 1")
+    @Query("SELECT * FROM notification_records WHERE id = :id")
     fun getById(id: Long): Flow<NotificationRecordEntity?>
 
-    @Query("SELECT * FROM notification_records WHERE id = :id LIMIT 1")
+    @Query("SELECT * FROM notification_records WHERE id = :id")
     suspend fun getByIdSync(id: Long): NotificationRecordEntity?
 
     @Query("SELECT * FROM notification_records ORDER BY captureTime DESC")
@@ -38,8 +38,8 @@ interface NotificationDao {
         WHERE title LIKE '%' || :query || '%' 
            OR text LIKE '%' || :query || '%' 
            OR bigText LIKE '%' || :query || '%' 
-           OR appName LIKE '%' || :query || '%'
-           OR subText LIKE '%' || :query || '%'
+           OR appName LIKE '%' || :query || '%' 
+           OR packageName LIKE '%' || :query || '%'
         ORDER BY captureTime DESC
     """)
     fun search(query: String): Flow<List<NotificationRecordEntity>>
@@ -75,6 +75,9 @@ interface NotificationDao {
 
     @Query("DELETE FROM notification_records WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM notification_records WHERE packageName = :packageName AND captureTime >= :startTime AND captureTime <= :endTime")
+    suspend fun deleteByPackageAndDateRange(packageName: String, startTime: Long, endTime: Long): Int
 
     @Query("DELETE FROM notification_records")
     suspend fun deleteAll()

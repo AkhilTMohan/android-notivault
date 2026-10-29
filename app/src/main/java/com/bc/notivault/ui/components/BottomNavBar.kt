@@ -37,6 +37,10 @@ import androidx.compose.ui.unit.sp
 import com.bc.notivault.ui.navigation.Destinations
 import com.bc.notivault.util.rememberHaptic
 
+/**
+ * 3 Core Navigation Tabs matching Phone 2 & Phone 3 mockups:
+ * Home (Dashboard) | History (Calendar by Day) | Settings
+ */
 enum class NavTab(
     val route: String,
     val title: String,
@@ -58,12 +62,12 @@ fun NotiVaultBottomNavBar(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = Color(0xFF0B0F19), // Midnight background matching app theme
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 6.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             HorizontalDivider(
-                color = Color(0xFF1E293B).copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
                 thickness = 0.8.dp
             )
 
@@ -104,7 +108,7 @@ fun NotiVaultBottomNavBar(
                             Icon(
                                 imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
                                 contentDescription = tab.title,
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFF94A3B8),
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -115,7 +119,7 @@ fun NotiVaultBottomNavBar(
                             text = tab.title,
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFF94A3B8)
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

@@ -71,7 +71,7 @@ fun NotificationActionBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF131B2E),
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 8.dp
     ) {
         Column(
@@ -94,7 +94,7 @@ fun NotificationActionBottomSheet(
                         text = record.appName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -116,7 +116,7 @@ fun NotificationActionBottomSheet(
                 }
             }
 
-            HorizontalDivider(color = Color(0xFF1E293B), thickness = 0.8.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 0.8.dp)
             Spacer(modifier = Modifier.height(8.dp))
 
             // Action 1: Copy Text
@@ -239,7 +239,7 @@ fun AppActionBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF131B2E),
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 8.dp
     ) {
         Column(
@@ -262,7 +262,7 @@ fun AppActionBottomSheet(
                         text = displayName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -277,7 +277,7 @@ fun AppActionBottomSheet(
                 }
             }
 
-            HorizontalDivider(color = Color(0xFF1E293B), thickness = 0.8.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), thickness = 0.8.dp)
             Spacer(modifier = Modifier.height(8.dp))
 
             // Action 1: View History
@@ -351,7 +351,7 @@ private fun BottomSheetActionRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     iconTint: Color = MaterialTheme.colorScheme.primary,
-    titleColor: Color = Color.White
+    titleColor: Color = Color.Unspecified
 ) {
     val haptic = rememberHaptic()
     Row(
@@ -369,7 +369,7 @@ private fun BottomSheetActionRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF1E293B).copy(alpha = 0.5f)),
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -387,7 +387,7 @@ private fun BottomSheetActionRow(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = titleColor
+                color = if (titleColor != Color.Unspecified) titleColor else MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,

@@ -1,6 +1,7 @@
 package com.bc.notivault.ui.screens.calendar
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bc.notivault.ui.components.AppIcon
+import com.bc.notivault.ui.components.SwipeToDeleteContainer
 import com.bc.notivault.ui.components.NotiVaultBottomNavBar
 import com.bc.notivault.ui.navigation.Destinations
 import com.bc.notivault.util.DateTimeUtils
@@ -245,58 +247,66 @@ fun CalendarScreen(
                     items = activeDayData.apps,
                     key = { it.packageName }
                 ) { appInfo ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .clickable {
-                                haptic.click()
-                                onNavigateToAppNotifications(appInfo.packageName, activeDayData.dateTimestamp)
-                            },
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF131B2E)
-                        )
+                    SwipeToDeleteContainer(
+                        onDelete = {
+                            viewModel.deleteAppNotificationsForDay(appInfo.packageName, activeDayData.dateTimestamp)
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        cornerRadius = 14.dp
                     ) {
-                        Row(
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable {
+                                    haptic.click()
+                                    onNavigateToAppNotifications(appInfo.packageName, activeDayData.dateTimestamp)
+                                },
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                         ) {
-                            AppIcon(
-                                packageName = appInfo.packageName,
-                                size = 42.dp
-                            )
-
-                            Spacer(modifier = Modifier.width(14.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = appInfo.appName,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AppIcon(
+                                    packageName = appInfo.packageName,
+                                    size = 42.dp
                                 )
 
-                                Spacer(modifier = Modifier.height(2.dp))
+                                Spacer(modifier = Modifier.width(14.dp))
 
-                                Text(
-                                    text = "${appInfo.count} notifications",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = appInfo.appName,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+
+                                    Spacer(modifier = Modifier.height(2.dp))
+
+                                    Text(
+                                        text = "${appInfo.count} notifications",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
-
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                modifier = Modifier.size(14.dp)
-                            )
                         }
                     }
                 }
@@ -377,7 +387,7 @@ private fun CalendarDayCell(
                 .size(32.dp)
                 .clip(CircleShape)
                 .background(
-                    if (isSelected) Color(0xFF0284C7)
+                    if (isSelected) MaterialTheme.colorScheme.primary
                     else Color.Transparent
                 ),
             contentAlignment = Alignment.Center
@@ -386,7 +396,7 @@ private fun CalendarDayCell(
                 text = "${dayData.dayOfMonth}",
                 fontSize = 13.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -397,7 +407,7 @@ private fun CalendarDayCell(
             text = if (hasNotifications) "${dayData.totalCount}" else "·",
             fontSize = 10.sp,
             fontWeight = if (hasNotifications) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isSelected) Color(0xFF38BDF8)
+            color = if (isSelected) MaterialTheme.colorScheme.primary
             else if (hasNotifications) MaterialTheme.colorScheme.onSurfaceVariant
             else Color.Transparent
         )

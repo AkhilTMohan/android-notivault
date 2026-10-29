@@ -1,6 +1,7 @@
 package com.bc.notivault.data.repository
 
 import com.bc.notivault.data.db.NotificationDao
+import com.bc.notivault.util.DateTimeUtils
 import com.bc.notivault.data.model.AppStatInfo
 import com.bc.notivault.data.model.InteractionStatus
 import com.bc.notivault.data.model.NotificationRecordEntity
@@ -27,6 +28,7 @@ interface NotificationRepository {
     fun getActiveOngoingCount(): Flow<Int>
     suspend fun toggleStar(id: Long, isStarred: Boolean)
     suspend fun deleteNotification(id: Long)
+    suspend fun deleteNotificationsByPackageAndDate(packageName: String, timestamp: Long)
     suspend fun deleteAllNotifications()
     suspend fun deleteOlderThanDays(days: Int): Int
     suspend fun exportNotificationsJson(): String
@@ -92,6 +94,12 @@ class NotificationRepositoryImpl @Inject constructor(
 
     override suspend fun deleteNotification(id: Long) {
         notificationDao.deleteById(id)
+    }
+
+    override suspend fun deleteNotificationsByPackageAndDate(packageName: String, timestamp: Long) {
+        val start = DateTimeUtils.getStartOfDay(timestamp)
+        val end = DateTimeUtils.getEndOfDay(timestamp)
+        notificationDao.deleteByPackageAndDateRange(packageName, start, end)
     }
 
     override suspend fun deleteAllNotifications() {

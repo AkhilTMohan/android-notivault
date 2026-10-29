@@ -3,8 +3,10 @@ package com.bc.notivault.ui.screens.settings
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Warning
@@ -46,6 +49,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -88,16 +92,24 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val haptic = rememberHaptic()
-    val coroutineScope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val coroutineScope = rememberCoroutineScope()
 
+    val isSystemDark = isSystemInDarkTheme()
+    val isDark = when (uiState.themeMode) {
+        "LIGHT" -> false
+        "DARK" -> true
+        else -> isSystemDark
+    }
+
+    var showRetentionDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showClearConfirmDialog by remember { mutableStateOf(false) }
+
+    // Refresh permission status when returning from settings
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshPermission(context)
     }
-
-    var showClearConfirmDialog by remember { mutableStateOf(false) }
-    var showRetentionDialog by remember { mutableStateOf(false) }
-    var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -155,10 +167,15 @@ fun SettingsScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (uiState.isPermissionGranted) {
-                        Color(0xFF14532D).copy(alpha = 0.35f)
+                        if (isDark) Color(0xFF14532D).copy(alpha = 0.35f) else Color(0xFFDCFCE7)
                     } else {
                         MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
                     }
+                ),
+                border = BorderStroke(
+                    1.dp,
+                    if (uiState.isPermissionGranted) Color(0xFF22C55E).copy(alpha = 0.4f)
+                    else MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
                 )
             ) {
                 Row(
@@ -180,7 +197,11 @@ fun SettingsScreen(
                         Text(
                             text = if (uiState.isPermissionGranted) "Notification Access Granted" else "Access Not Granted",
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = if (uiState.isPermissionGranted) {
+                                if (isDark) Color.White else Color(0xFF14532D)
+                            } else {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            }
                         )
                         Text(
                             text = if (uiState.isPermissionGranted) {
@@ -189,7 +210,11 @@ fun SettingsScreen(
                                 "Enable access to capture notifications from other applications."
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (uiState.isPermissionGranted) {
+                                if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF166534)
+                            } else {
+                                MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                            }
                         )
                     }
 
@@ -227,14 +252,19 @@ fun SettingsScreen(
                 onClick = { showRetentionDialog = true }
             )
 
-            // Theme Settings Card
-            SettingsItemCard(
-                icon = Icons.Default.DarkMode,
-                title = "Theme Mode",
-                value = when (uiState.themeMode) {
+            // Dark Mode Toggle Card with direct Switch toggle
+            SettingsToggleCard(
+                icon = if (isDark) Icons.Default.DarkMode else Icons.Default.LightMode,
+                title = "Dark Mode",
+                subtitle = when (uiState.themeMode) {
                     "LIGHT" -> "Light mode"
                     "DARK" -> "Dark mode"
-                    else -> "System default"
+                    else -> "System default (${if (isSystemDark) "Dark" else "Light"})"
+                },
+                isChecked = isDark,
+                onCheckedChange = { checked ->
+                    haptic.confirm()
+                    viewModel.setThemeMode(if (checked) "DARK" else "LIGHT")
                 },
                 onClick = { showThemeDialog = true }
             )
@@ -244,8 +274,9 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF131B2E)
-                )
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
             ) {
                 Column(
                     modifier = Modifier
@@ -262,25 +293,26 @@ fun SettingsScreen(
                     )
 
                     Text(
-                        text = "Export your vaulted notification history in JSON or Plain Text format. Exports contain only text metadata.",
+                        text = "Export all ${uiState.totalRecords} notifications recorded in your local vault. No network connectivity is used.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         OutlinedButton(
                             onClick = {
-                                haptic.confirm()
+                                haptic.click()
                                 coroutineScope.launch {
                                     val json = viewModel.exportJson()
                                     shareExport(context, json, "notivault_export.json", "application/json")
                                 }
                             },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
@@ -289,14 +321,15 @@ fun SettingsScreen(
 
                         OutlinedButton(
                             onClick = {
-                                haptic.confirm()
+                                haptic.click()
                                 coroutineScope.launch {
                                     val text = viewModel.exportPlainText()
                                     shareExport(context, text, "notivault_export.txt", "text/plain")
                                 }
                             },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
@@ -311,8 +344,9 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF131B2E)
-                )
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
             ) {
                 Column(
                     modifier = Modifier
@@ -354,8 +388,9 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF131B2E)
-                )
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
             ) {
                 Row(
                     modifier = Modifier
@@ -377,7 +412,7 @@ fun SettingsScreen(
                             text = "Privacy & Offline Guarantee",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -538,10 +573,12 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsItemCard(
+private fun SettingsToggleCard(
     icon: ImageVector,
     title: String,
-    value: String,
+    subtitle: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
     onClick: () -> Unit
 ) {
     val haptic = rememberHaptic()
@@ -554,8 +591,9 @@ private fun SettingsItemCard(
             },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF131B2E)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
     ) {
         Row(
             modifier = Modifier
@@ -577,7 +615,68 @@ private fun SettingsItemCard(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Switch(
+                checked = isChecked,
+                onCheckedChange = {
+                    haptic.confirm()
+                    onCheckedChange(it)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsItemCard(
+    icon: ImageVector,
+    title: String,
+    value: String,
+    onClick: () -> Unit
+) {
+    val haptic = rememberHaptic()
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                haptic.click()
+                onClick()
+            },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = value,
@@ -613,8 +712,9 @@ private fun SettingsNavCard(
             },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF131B2E)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
     ) {
         Row(
             modifier = Modifier
@@ -636,7 +736,7 @@ private fun SettingsNavCard(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = subtitle,

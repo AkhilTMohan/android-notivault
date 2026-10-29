@@ -176,7 +176,10 @@ fun NotiVaultNavHost(
             val viewModel: AnalyticsViewModel = hiltViewModel()
             AnalyticsScreen(
                 viewModel = viewModel,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToAppNotifications = { pkg ->
+                    navController.navigate(Destinations.appNotificationsRoute(pkg))
+                }
             )
         }
 

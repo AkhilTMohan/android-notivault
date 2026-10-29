@@ -184,6 +184,12 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun deleteAppNotificationsForDay(packageName: String, timestamp: Long) {
+        viewModelScope.launch {
+            repository.deleteNotificationsByPackageAndDate(packageName, timestamp)
+        }
+    }
+
     fun excludeApp(packageName: String) {
         viewModelScope.launch {
             preferenceManager.toggleExcludedPackage(packageName, exclude = true)

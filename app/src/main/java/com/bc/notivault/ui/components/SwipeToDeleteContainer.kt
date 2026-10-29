@@ -39,9 +39,9 @@ import androidx.compose.ui.unit.sp
 import com.bc.notivault.util.rememberHaptic
 
 /**
- * Wraps notification cards with a swipe gesture (left-to-right / StartToEnd)
+ * Wraps notification cards with a bidirectional swipe gesture (left-to-right & right-to-left)
  * displaying a red background with a delete trash icon that permanently deletes
- * the notification from Room database.
+ * the notification/group from Room database.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +56,7 @@ fun SwipeToDeleteContainer(
 
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
-            if (dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+            if (dismissValue == SwipeToDismissBoxValue.StartToEnd || dismissValue == SwipeToDismissBoxValue.EndToStart) {
                 haptic.reject()
                 isDismissed = true
                 onDelete()
@@ -77,11 +77,14 @@ fun SwipeToDeleteContainer(
         SwipeToDismissBox(
             state = dismissState,
             enableDismissFromStartToEnd = true,
-            enableDismissFromEndToStart = false,
+            enableDismissFromEndToStart = true,
             modifier = modifier,
             backgroundContent = {
+                val isEndToStart = dismissState.targetValue == SwipeToDismissBoxValue.EndToStart ||
+                        dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart
+
                 val color by animateColorAsState(
-                    targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
+                    targetValue = if (dismissState.targetValue != SwipeToDismissBoxValue.Settled) {
                         MaterialTheme.colorScheme.error
                     } else {
                         MaterialTheme.colorScheme.error.copy(alpha = 0.75f)
@@ -95,22 +98,38 @@ fun SwipeToDeleteContainer(
                         .clip(RoundedCornerShape(cornerRadius))
                         .background(color)
                         .padding(horizontal = 20.dp),
-                    contentAlignment = Alignment.CenterStart
+                    contentAlignment = if (isEndToStart) Alignment.CenterEnd else Alignment.CenterStart
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete notification",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Delete",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
+                        if (isEndToStart) {
+                            Text(
+                                text = "Delete",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete notification",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete notification",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Delete",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
             }

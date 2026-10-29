@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -42,6 +43,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -161,12 +163,12 @@ fun DashboardScreen(
                 actions = {
                     IconButton(onClick = {
                         haptic.click()
-                        onNavigateToSettings()
+                        onNavigateToAnalytics()
                     }) {
                         Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            imageVector = Icons.Default.Insights,
+                            contentDescription = "Analytics",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -254,13 +256,9 @@ fun DashboardScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF132038)
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    border = CardDefaults.outlinedCardBorder().copy(
-                        brush = Brush.horizontalGradient(
-                            listOf(Color(0xFF2563EB).copy(alpha = 0.5f), Color(0xFF38BDF8).copy(alpha = 0.2f))
-                        )
-                    )
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
                 ) {
                     Row(
                         modifier = Modifier
@@ -296,7 +294,7 @@ fun DashboardScreen(
                                     text = "${uiState.todayCount}",
                                     fontSize = 36.sp,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     lineHeight = 40.sp
                                 )
 
@@ -558,43 +556,51 @@ fun DashboardScreen(
             ) { group ->
                 val isExpanded = expandedPackages.contains(group.packageName)
                 if (group.notifications.size > 1) {
-                    AppGroupNotificationCard(
-                        group = group,
-                        isExpanded = isExpanded,
-                        onToggleExpand = {
-                            haptic.tick()
-                            expandedPackages = if (isExpanded) {
-                                expandedPackages - group.packageName
-                            } else {
-                                expandedPackages + group.packageName
+                    SwipeToDeleteContainer(
+                        onDelete = {
+                            val targetDate = group.notifications.firstOrNull()?.captureTime ?: System.currentTimeMillis()
+                            viewModel.deleteAppNotificationsForDay(group.packageName, targetDate)
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        cornerRadius = 14.dp
+                    ) {
+                        AppGroupNotificationCard(
+                            group = group,
+                            isExpanded = isExpanded,
+                            onToggleExpand = {
+                                haptic.tick()
+                                expandedPackages = if (isExpanded) {
+                                    expandedPackages - group.packageName
+                                } else {
+                                    expandedPackages + group.packageName
+                                }
+                            },
+                            onNavigateToApp = {
+                                haptic.click()
+                                onNavigateToAppNotifications(group.packageName)
+                            },
+                            onNavigateToDetail = { id ->
+                                haptic.click()
+                                onNavigateToDetail(id)
+                            },
+                            onAppLongClick = {
+                                haptic.longPress()
+                                actionApp = Pair(group.packageName, group.appName)
+                            },
+                            onNotificationLongClick = {
+                                haptic.longPress()
+                                actionNotification = it
+                            },
+                            onDeleteNotification = { id ->
+                                viewModel.deleteNotification(id)
                             }
-                        },
-                        onNavigateToApp = {
-                            haptic.click()
-                            onNavigateToAppNotifications(group.packageName)
-                        },
-                        onNavigateToDetail = { id ->
-                            haptic.click()
-                            onNavigateToDetail(id)
-                        },
-                        onAppLongClick = {
-                            haptic.longPress()
-                            actionApp = Pair(group.packageName, group.appName)
-                        },
-                        onNotificationLongClick = {
-                            haptic.longPress()
-                            actionNotification = it
-                        },
-                        onDeleteNotification = { id ->
-                            viewModel.deleteNotification(id)
-                        },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
+                        )
+                    }
                 } else {
                     val record = group.notifications.first()
                     SwipeToDeleteContainer(
                         onDelete = {
-                            viewModel.deleteNotification(record.id)
+                            viewModel.deleteAppNotificationsForDay(record.packageName, record.captureTime)
                         },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                         cornerRadius = 14.dp
@@ -665,8 +671,9 @@ private fun AppGroupNotificationCard(
             .clip(RoundedCornerShape(14.dp)),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF131B2E)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Main App Card Header Row:
@@ -708,7 +715,7 @@ private fun AppGroupNotificationCard(
                             text = group.appName,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false)
@@ -755,7 +762,7 @@ private fun AppGroupNotificationCard(
                             text = "${group.notifications.size}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
 
@@ -783,7 +790,7 @@ private fun AppGroupNotificationCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF0C1322))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -850,8 +857,9 @@ private fun ExpandedNotificationSubCard(
             ),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF162035)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
     ) {
         Column(
             modifier = Modifier
@@ -869,7 +877,7 @@ private fun ExpandedNotificationSubCard(
                         text = title,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
@@ -879,7 +887,7 @@ private fun ExpandedNotificationSubCard(
                         text = record.appName,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
                     )
                 }
 
@@ -950,7 +958,7 @@ private fun RecentAppGridItem(
                 modifier = Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF131B2E)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
                 contentAlignment = Alignment.Center
             ) {
                 AppIcon(
@@ -970,7 +978,7 @@ private fun RecentAppGridItem(
                     text = "${app.totalCount}",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -1016,8 +1024,9 @@ private fun LatestNotificationRow(
             ),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF131B2E)
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
     ) {
         Row(
             modifier = Modifier
