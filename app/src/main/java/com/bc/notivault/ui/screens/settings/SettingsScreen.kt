@@ -24,8 +24,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
@@ -50,6 +52,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -64,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -163,7 +167,13 @@ fun SettingsScreen(
         ) {
             // Permission Status Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable {
+                        haptic.click()
+                        NotificationPermissionHelper.openNotificationListenerSettings(context)
+                    },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (uiState.isPermissionGranted) {
@@ -205,7 +215,7 @@ fun SettingsScreen(
                         )
                         Text(
                             text = if (uiState.isPermissionGranted) {
-                                "NotiVault is actively recording incoming notifications."
+                                "NotiVault is active. Tap to adjust system notification checkboxes & access."
                             } else {
                                 "Enable access to capture notifications from other applications."
                             },
@@ -229,9 +239,27 @@ fun SettingsScreen(
                         ) {
                             Text("Enable", fontSize = 12.sp)
                         }
+                    } else {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = "Manage system notification settings",
+                            tint = if (isDark) Color.White.copy(alpha = 0.7f) else Color(0xFF14532D).copy(alpha = 0.7f),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
+
+            // Dedicated System Notification Checkboxes / Categories Card
+            SettingsNavCard(
+                icon = Icons.Default.Checklist,
+                title = "Notification Manager Options",
+                subtitle = "Select notification categories (Conversations, Alerting, Silent, Ongoing)",
+                onClick = {
+                    haptic.click()
+                    NotificationPermissionHelper.openNotificationListenerSettings(context)
+                }
+            )
 
             // Excluded Apps Navigation Card
             SettingsNavCard(
@@ -624,12 +652,21 @@ private fun SettingsToggleCard(
                 )
             }
 
+            val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
             Switch(
                 checked = isChecked,
                 onCheckedChange = {
                     haptic.confirm()
                     onCheckedChange(it)
-                }
+                },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    checkedBorderColor = Color.Transparent,
+                    uncheckedThumbColor = if (isDark) Color(0xFFCBD5E1) else Color(0xFF64748B),
+                    uncheckedTrackColor = if (isDark) Color(0xFF1E293B) else Color(0xFFE2E8F0),
+                    uncheckedBorderColor = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8)
+                )
             )
         }
     }

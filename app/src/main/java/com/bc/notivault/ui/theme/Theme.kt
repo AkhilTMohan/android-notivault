@@ -30,8 +30,8 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = VaultTextPrimary,
     surfaceVariant = VaultCardSurfaceVariant,
     onSurfaceVariant = VaultTextSecondary,
-    outline = VaultCardBorder,
-    outlineVariant = Color(0xFF1E293B)
+    outline = Color(0xFF64748B),
+    outlineVariant = VaultCardBorder
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -49,7 +49,7 @@ private val LightColorScheme = lightColorScheme(
     onSurface = Color(0xFF0F172A),
     surfaceVariant = Color(0xFFF1F5F9),
     onSurfaceVariant = Color(0xFF475569),
-    outline = Color(0xFFE2E8F0),
+    outline = Color(0xFF94A3B8),
     outlineVariant = Color(0xFFE2E8F0)
 )
 

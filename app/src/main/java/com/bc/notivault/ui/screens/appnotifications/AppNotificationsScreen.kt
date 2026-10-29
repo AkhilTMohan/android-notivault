@@ -53,6 +53,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -67,6 +68,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -277,12 +279,21 @@ fun AppNotificationsScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
+                        val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
                         Switch(
                             checked = uiState.isExcluded,
                             onCheckedChange = {
                                 haptic.tick()
                                 viewModel.toggleAppExclusion(it)
-                            }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = Color.Transparent,
+                                uncheckedThumbColor = if (isDark) Color(0xFFCBD5E1) else Color(0xFF64748B),
+                                uncheckedTrackColor = if (isDark) Color(0xFF1E293B) else Color(0xFFE2E8F0),
+                                uncheckedBorderColor = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8)
+                            )
                         )
                     }
                 }

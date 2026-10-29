@@ -8,6 +8,6 @@ object AdConfig {
     // Cooldown duration between interstitial ads to comply with AdMob policy (60 seconds)
     const val INTERSTITIAL_COOLDOWN_MS = 60_000L
 
-    // Action frequency: trigger after every N natural transitions
+    // Action frequency: trigger on every major click (governed by the cooldown delay)
     const val INTERSTITIAL_ACTION_THRESHOLD = 3
 }

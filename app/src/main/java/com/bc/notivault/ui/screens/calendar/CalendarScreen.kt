@@ -26,6 +26,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -74,6 +77,8 @@ fun CalendarScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedDay = uiState.selectedDay
 
+    var noNotificationsAlertDate by remember { mutableStateOf<String?>(null) }
+
     val monthName = DateFormatSymbols().months[uiState.month]
     val monthTitle = "$monthName ${uiState.year}"
 
@@ -89,6 +94,39 @@ fun CalendarScreen(
         } else {
             uiState.daysData.values.firstOrNull { it.totalCount > 0 }
         }
+    }
+
+    if (noNotificationsAlertDate != null) {
+        AlertDialog(
+            onDismissRequest = { noNotificationsAlertDate = null },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            title = {
+                Text(
+                    text = "No Notifications",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "No notifications were recorded on $noNotificationsAlertDate.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { noNotificationsAlertDate = null }
+                ) {
+                    Text("OK", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -205,6 +243,14 @@ fun CalendarScreen(
                         daysData = uiState.daysData,
                         onDayClick = { dayData ->
                             haptic.click()
+                            if (dayData.totalCount == 0) {
+                                val cal = Calendar.getInstance().apply {
+                                    set(Calendar.YEAR, uiState.year)
+                                    set(Calendar.MONTH, uiState.month)
+                                    set(Calendar.DAY_OF_MONTH, dayData.dayOfMonth)
+                                }
+                                noNotificationsAlertDate = DateTimeUtils.formatDateShort(cal.timeInMillis)
+                            }
                             viewModel.onSelectDay(dayData)
                         }
                     )
@@ -381,14 +427,18 @@ private fun CalendarDayCell(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Circle around day number when selected (matching Phone 2 cyan circle)
+        // Circle around day number when selected
         Box(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
                 .background(
-                    if (isSelected) MaterialTheme.colorScheme.primary
-                    else Color.Transparent
+                    if (isSelected) {
+                        if (hasNotifications) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    } else {
+                        Color.Transparent
+                    }
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -396,20 +446,32 @@ private fun CalendarDayCell(
                 text = "${dayData.dayOfMonth}",
                 fontSize = 13.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                color = if (isSelected) {
+                    if (hasNotifications) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                } else if (hasNotifications) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                }
             )
         }
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // Count under date (matching Phone 2)
+        // Count under date (e.g. number of notifications or disabled indicator)
         Text(
-            text = if (hasNotifications) "${dayData.totalCount}" else "·",
+            text = if (hasNotifications) "${dayData.totalCount}" else "—",
             fontSize = 10.sp,
             fontWeight = if (hasNotifications) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isSelected) MaterialTheme.colorScheme.primary
-            else if (hasNotifications) MaterialTheme.colorScheme.onSurfaceVariant
-            else Color.Transparent
+            color = if (isSelected) {
+                if (hasNotifications) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            } else if (hasNotifications) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+            }
         )
     }
 }

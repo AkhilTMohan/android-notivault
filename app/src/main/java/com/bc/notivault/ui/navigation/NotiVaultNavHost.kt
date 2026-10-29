@@ -99,10 +99,12 @@ fun NotiVaultNavHost(
                     }
                 },
                 onNavigateToCalendar = {
-                    navController.navigate(Destinations.CALENDAR) {
-                        popUpTo(Destinations.DASHBOARD) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    navigateWithAd {
+                        navController.navigate(Destinations.CALENDAR) {
+                            popUpTo(Destinations.DASHBOARD) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 },
                 onNavigateToAnalytics = {
@@ -111,10 +113,12 @@ fun NotiVaultNavHost(
                     }
                 },
                 onNavigateToSettings = {
-                    navController.navigate(Destinations.SETTINGS) {
-                        popUpTo(Destinations.DASHBOARD) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    navigateWithAd {
+                        navController.navigate(Destinations.SETTINGS) {
+                            popUpTo(Destinations.DASHBOARD) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )
@@ -142,7 +146,9 @@ fun NotiVaultNavHost(
                     }
                 },
                 onNavigateToCalendar = {
-                    navController.navigate(Destinations.CALENDAR)
+                    navigateWithAd {
+                        navController.navigate(Destinations.CALENDAR)
+                    }
                 }
             )
         }
@@ -168,7 +174,9 @@ fun NotiVaultNavHost(
                     }
                 },
                 onNavigateToCalendar = {
-                    navController.navigate(Destinations.CALENDAR)
+                    navigateWithAd {
+                        navController.navigate(Destinations.CALENDAR)
+                    }
                 }
             )
         }
@@ -184,17 +192,21 @@ fun NotiVaultNavHost(
                     }
                 },
                 onNavigateToHome = {
-                    navController.navigate(Destinations.DASHBOARD) {
-                        popUpTo(Destinations.DASHBOARD) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    navigateWithAd {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.DASHBOARD) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 },
                 onNavigateToSettings = {
-                    navController.navigate(Destinations.SETTINGS) {
-                        popUpTo(Destinations.DASHBOARD) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    navigateWithAd {
+                        navController.navigate(Destinations.SETTINGS) {
+                            popUpTo(Destinations.DASHBOARD) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )
@@ -218,19 +230,27 @@ fun NotiVaultNavHost(
             SettingsScreen(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
-                onNavigateToApps = { navController.navigate(Destinations.APPS) },
+                onNavigateToApps = {
+                    navigateWithAd {
+                        navController.navigate(Destinations.APPS)
+                    }
+                },
                 onNavigateToHome = {
-                    navController.navigate(Destinations.DASHBOARD) {
-                        popUpTo(Destinations.DASHBOARD) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    navigateWithAd {
+                        navController.navigate(Destinations.DASHBOARD) {
+                            popUpTo(Destinations.DASHBOARD) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 },
                 onNavigateToCalendar = {
-                    navController.navigate(Destinations.CALENDAR) {
-                        popUpTo(Destinations.DASHBOARD) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    navigateWithAd {
+                        navController.navigate(Destinations.CALENDAR) {
+                            popUpTo(Destinations.DASHBOARD) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )

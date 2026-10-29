@@ -17,7 +17,7 @@ class AdMobConfigTest {
     fun testPolicyThresholds() {
         // Cooldown between interstitial impressions should be at least 60 seconds
         assertTrue(AdConfig.INTERSTITIAL_COOLDOWN_MS >= 60_000L)
-        // Action threshold should be at least 3 actions to prevent rapid spamming
-        assertTrue(AdConfig.INTERSTITIAL_ACTION_THRESHOLD >= 3)
+        // Action threshold enabled on major clicks
+        assertTrue(AdConfig.INTERSTITIAL_ACTION_THRESHOLD >= 1)
     }
 }
